@@ -1,41 +1,43 @@
 package main
 
 import (
-	"regexp"
+	"fmt"
+	"strings"
 )
 
 func part2(lines []string) int {
-	convertToInt := func(match string) int {
-		digitMap := map[string]int{
-			"one":   1,
-			"two":   2,
-			"three": 3,
-			"four":  4,
-			"five":  5,
-			"six":   6,
-			"seven": 7,
-			"eight": 8,
-			"nine":  9,
-		}
-		val, ok := digitMap[match]
-		if ok {
-			return val
-		}
-
-		return int(match[0] - '0')
+	for i := range lines {
+		translateValue(&lines[i])
 	}
 
-	count := 0
+	return part1(lines)
+}
 
-	r, _ := regexp.Compile("(\\d)|(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)")
-
-	for _, line := range lines {
-		match := r.FindAllString(line, -1)
-		if len(match) != 0 {
-			count += convertToInt(match[0]) * 10
-			count += convertToInt(match[len(match)-1])
+func translateValue(val *string) {
+	writtenNumbers := [9]string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
+	for _, number := range writtenNumbers {
+		if strings.Contains(*val, number) {
+			*val = strings.ReplaceAll(*val, number, fmt.Sprintf("%s%s%s", number, writtenNumberToNumeral(number), number))
 		}
 	}
+	for _, number := range writtenNumbers {
+		if strings.Contains(*val, number) {
+			*val = strings.ReplaceAll(*val, number, "")
+		}
+	}
+}
 
-	return count
+func writtenNumberToNumeral(number string) string {
+	translation := map[string]string{
+		"one":   "1",
+		"two":   "2",
+		"three": "3",
+		"four":  "4",
+		"five":  "5",
+		"six":   "6",
+		"seven": "7",
+		"eight": "8",
+		"nine":  "9",
+	}
+	return translation[number]
 }
