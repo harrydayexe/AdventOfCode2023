@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"unicode"
 )
 
 func main() {
@@ -15,23 +14,8 @@ func main() {
 	}
 
 	lines := strings.Split(string(content), "\n")
-	count := 0
 
-	isNumeric := func(r rune) bool {
-		return unicode.IsDigit(r)
-	}
+	part1Ans := part1(lines)
 
-	for _, line := range lines {
-		digit1Index := strings.IndexFunc(line, isNumeric)
-		if digit1Index != -1 {
-			count += int(line[digit1Index]-'0') * 10
-		}
-
-		digit2Index := strings.LastIndexFunc(line, isNumeric)
-		if digit2Index != -1 {
-			count += int(line[digit2Index] - '0')
-		}
-	}
-
-	fmt.Println("Total:", count)
+	fmt.Println("Part 1 Answer:", part1Ans)
 }
