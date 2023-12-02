@@ -21,8 +21,21 @@ func part1(games []string) int {
 	const MAX_GREEN = 13
 	const MAX_BLUE = 14
 
-	cleanData(games)
-	return 0
+	var result = 0
+
+	var cleanedGames = cleanData(games)
+	for _, cleanedGame := range cleanedGames {
+		var gameMaxRed, gameMaxGreen, gameMaxBlue = 0, 0, 0
+		for _, h := range cleanedGame.hands {
+			gameMaxRed = max(gameMaxRed, h.numOfRed)
+			gameMaxGreen = max(gameMaxGreen, h.numOfGreen)
+			gameMaxBlue = max(gameMaxBlue, h.numOfBlue)
+		}
+		if gameMaxRed <= MAX_RED && gameMaxGreen <= MAX_GREEN && gameMaxBlue <= MAX_BLUE {
+			result += cleanedGame.id
+		}
+	}
+	return result
 }
 
 func cleanData(gamesI []string) []game {
@@ -44,7 +57,7 @@ func cleanData(gamesI []string) []game {
 			}
 			hands = append(hands, hand{numOfBlue: numOfBlue, numOfGreen: numOfGreen, numOfRed: numOfRed})
 		}
-		games = append(games, game{id: gameID, hands: hands})
+		games = append(games, game{id: gameID + 1, hands: hands})
 	}
 	return games
 }
