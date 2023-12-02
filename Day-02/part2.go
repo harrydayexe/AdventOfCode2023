@@ -1,10 +1,6 @@
 package main
 
-func part1(games []string) int {
-	const MAX_RED = 12
-	const MAX_GREEN = 13
-	const MAX_BLUE = 14
-
+func part2(games []string) int {
 	var result = 0
 
 	var cleanedGames = cleanData(games)
@@ -15,9 +11,7 @@ func part1(games []string) int {
 			gameMaxGreen = max(gameMaxGreen, h.numOfGreen)
 			gameMaxBlue = max(gameMaxBlue, h.numOfBlue)
 		}
-		if gameMaxRed <= MAX_RED && gameMaxGreen <= MAX_GREEN && gameMaxBlue <= MAX_BLUE {
-			result += cleanedGame.id
-		}
+		result += gameMaxRed * gameMaxGreen * gameMaxBlue
 	}
 	return result
 }
