@@ -16,4 +16,5 @@ func main() {
 	games := strings.Split(string(content), "\n")
 
 	println("Part 1:", part1(games))
+	println("Part 2:", part2(games))
 }
