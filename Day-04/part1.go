@@ -42,7 +42,7 @@ func cleanData(cards []string) []game {
 		winners := strings.Fields(winnersString)
 		games := strings.Fields(gameString)
 
-		var g = game{id: i, winners: make(map[int]struct{}), actual: make(map[int]struct{})}
+		var g = game{id: i + 1, winners: make(map[int]struct{}), actual: make(map[int]struct{})}
 		for j := 0; j < len(winners); j++ {
 			k, err := strconv.Atoi(winners[j])
 			if err != nil {
