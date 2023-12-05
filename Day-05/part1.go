@@ -1,6 +1,9 @@
 package main
 
+import "fmt"
+
 func part1(lines []string) int {
-	cleanData(lines)
+	var p = cleanData(lines)
+	fmt.Println(p)
 	return 0
 }
