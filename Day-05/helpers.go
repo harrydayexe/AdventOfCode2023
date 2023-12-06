@@ -7,13 +7,13 @@ import (
 
 type puzzleInput struct {
 	seeds                 map[int]struct{}
-	seedToSoil            map[int]int
-	soilToFertiliser      map[int]int
-	fertiliserToWater     map[int]int
-	waterToLight          map[int]int
-	lightToTemperature    map[int]int
-	temperatureToHumidity map[int]int
-	humidityToLocation    map[int]int
+	seedToSoil            [][3]int
+	soilToFertiliser      [][3]int
+	fertiliserToWater     [][3]int
+	waterToLight          [][3]int
+	lightToTemperature    [][3]int
+	temperatureToHumidity [][3]int
+	humidityToLocation    [][3]int
 }
 
 func cleanData(lines []string) *puzzleInput {
@@ -29,19 +29,19 @@ func cleanData(lines []string) *puzzleInput {
 	var p = puzzleInput{seeds: seeds}
 	var sections = splitSections(lines)
 
-	p.seedToSoil = makeMap(sections[0])
-	p.soilToFertiliser = makeMap(sections[1])
-	p.fertiliserToWater = makeMap(sections[2])
-	p.waterToLight = makeMap(sections[3])
-	p.lightToTemperature = makeMap(sections[4])
-	p.temperatureToHumidity = makeMap(sections[5])
-	p.humidityToLocation = makeMap(sections[6])
+	p.seedToSoil = sections[0]
+	p.soilToFertiliser = sections[1]
+	p.fertiliserToWater = sections[2]
+	p.waterToLight = sections[3]
+	p.lightToTemperature = sections[4]
+	p.temperatureToHumidity = sections[5]
+	p.humidityToLocation = sections[6]
 
 	return &p
 }
 
-func splitSections(lines []string) [7][][]int {
-	var returnValue [7][][]int
+func splitSections(lines []string) [7][][3]int {
+	var returnValue [7][][3]int
 	var sectionNum = 0
 	for i, line := range lines {
 		if i <= 2 || line == "" {
@@ -52,27 +52,22 @@ func splitSections(lines []string) [7][][]int {
 			continue
 		}
 
-		var arrOfNums []int
-		for _, num := range strings.Fields(line) {
-			n, err := strconv.Atoi(num)
-			if err != nil {
-				panic(err)
-			}
-			arrOfNums = append(arrOfNums, n)
-		}
+		var stringNums = strings.Fields(line)
+		var i1, i2, i3 int
+		i1, _ = strconv.Atoi(stringNums[0])
+		i2, _ = strconv.Atoi(stringNums[1])
+		i3, _ = strconv.Atoi(stringNums[2])
+		var arrOfNums = [3]int{i1, i2, i3}
 		returnValue[sectionNum] = append(returnValue[sectionNum], arrOfNums)
 	}
 	return returnValue
 }
 
-func makeMap(params [][]int) map[int]int {
-	var returnMap = make(map[int]int)
-
-	for _, mapEntry := range params {
-		for i := 0; i < mapEntry[2]; i++ {
-			returnMap[mapEntry[1]+i] = mapEntry[0] + i
+func convertMap(num int, ranges [][3]int) int {
+	for _, r := range ranges {
+		if r[1] <= num && num < r[1]+r[2] {
+			return num - r[1] + r[0]
 		}
 	}
-
-	return returnMap
+	return num
 }
