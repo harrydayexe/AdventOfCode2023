@@ -1,11 +1,9 @@
 package main
 
-import (
-	"slices"
-)
+import "slices"
 
-func part1(hands []string) int {
-	allHands := inputToHands(hands, false)
+func part2(hands []string) int {
+	allHands := inputToHands(hands, true)
 
 	slices.SortFunc(allHands, roundSortFunc)
 
