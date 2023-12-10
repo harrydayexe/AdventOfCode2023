@@ -1,22 +1,22 @@
 package main
 
-func part1(lines []string) int {
+func part2(lines []string) int {
 	data := cleanData(lines)
 
 	var runningTotal = 0
 	for _, series := range data {
-		runningTotal += extrapolate1(series)
+		runningTotal += extrapolate2(series)
 	}
 
 	return runningTotal
 }
 
-func extrapolate1(series []int) int {
+func extrapolate2(series []int) int {
 	if isAllZero(series) {
 		return 0
 	}
 
 	deltas := calcDelta(series)
-	diff := extrapolate1(deltas)
-	return diff + series[len(series)-1]
+	diff := extrapolate2(deltas)
+	return series[0] - diff
 }
