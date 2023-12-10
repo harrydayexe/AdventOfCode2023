@@ -3,13 +3,13 @@ package main
 type PipeDirection int
 
 const (
-	Vertical PipeDirection = iota
+	Empty PipeDirection = iota
+	Vertical
 	Horizontal
 	NorthToEast
 	NorthToWest
 	SouthToEast
 	SouthToWest
-	Empty
 	Start
 )
 
