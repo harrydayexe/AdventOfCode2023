@@ -15,11 +15,14 @@ func countPossibleCombinations(row HotSpringRow) int {
 	if row.isValid() {
 		return 1
 	}
-	if row.countHotSprings(Unknown)+row.countHotSprings(Damaged) < row.countTargetTotalDamaged() {
+
+	countUnknown, _, countDamaged := row.countHotSprings()
+
+	if countUnknown+countDamaged < row.countTargetTotalDamaged() {
 		// If the number of unknowns is not enough to make the total required then prune
 		return 0
 	}
-	if row.countHotSprings(Unknown) == 0 && !row.isValid() {
+	if countUnknown == 0 {
 		// If all the unknowns have been set and the row is invalid, then this is not a valid solution
 		return 0
 	}

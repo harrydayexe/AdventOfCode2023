@@ -24,14 +24,18 @@ type HotSpringRow struct {
 	HotSpringGroups  []int
 }
 
-func (row *HotSpringRow) countHotSprings(ofType HotSpring) int {
-	var count = 0
+func (row *HotSpringRow) countHotSprings() (int, int, int) {
+	var countUnknown, countWorking, countDamaged int
 	for _, record := range row.HotSpringRecords {
-		if record == ofType {
-			count += 1
+		if record == Unknown {
+			countUnknown += 1
+		} else if record == Working {
+			countWorking += 1
+		} else {
+			countDamaged += 1
 		}
 	}
-	return count
+	return countUnknown, countWorking, countDamaged
 }
 
 func (row *HotSpringRow) countTargetTotalDamaged() int {
@@ -43,7 +47,8 @@ func (row *HotSpringRow) countTargetTotalDamaged() int {
 }
 
 func (row *HotSpringRow) isValid() bool {
-	if row.countHotSprings(Unknown) != 0 {
+	countUnknown, _, _ := row.countHotSprings()
+	if countUnknown != 0 {
 		return false
 	}
 
