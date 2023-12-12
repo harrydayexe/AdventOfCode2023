@@ -214,5 +214,8 @@ func countPossibleCombinations(row HotSpringRow) int {
 		return 0
 	}
 
-	return countPossibleCombinations(row.setNextUnknown(Damaged)) + countPossibleCombinations(row.setNextUnknown(Working))
+	var damagedCount = countPossibleCombinations(row.setNextUnknown(Damaged))
+	var workingCount = countPossibleCombinations(row.setNextUnknown(Working))
+
+	return damagedCount + workingCount
 }
