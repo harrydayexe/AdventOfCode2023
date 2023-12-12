@@ -46,24 +46,75 @@ func (row *HotSpringRow) countTargetTotalDamaged() int {
 	return count
 }
 
+func (row *HotSpringRow) countTotalNeeded() int {
+	var count = 0
+	for _, group := range row.HotSpringGroups {
+		count += group
+	}
+	count += len(row.HotSpringGroups) - 1
+	return count
+}
+
 func (row *HotSpringRow) isValid() bool {
-	countUnknown, _, _ := row.countHotSprings()
-	if countUnknown != 0 {
-		return false
+	var groupIndex = 0
+	var groupRunningCount = 0
+	for _, spring := range row.HotSpringRecords {
+		if spring == Damaged {
+			groupRunningCount += 1
+		} else if groupRunningCount != 0 {
+			if groupIndex >= len(row.HotSpringGroups) || row.HotSpringGroups[groupIndex] != groupRunningCount {
+				return false
+			}
+			groupRunningCount = 0
+			groupIndex += 1
+		}
 	}
-
-	groups := groupDamagedHotSprings(row.HotSpringRecords)
-
-	if len(groups) != len(row.HotSpringGroups) {
-		return false
-	}
-
-	for i := 0; i < len(groups); i++ {
-		if groups[i] != row.HotSpringGroups[i] {
+	if groupRunningCount != 0 {
+		if groupIndex >= len(row.HotSpringGroups) || row.HotSpringGroups[groupIndex] != groupRunningCount {
 			return false
 		}
 	}
 	return true
+}
+
+func (row *HotSpringRow) shouldBePruned() bool {
+	remainingNeeded := row.countTotalNeeded()
+	totalLength := len(row.HotSpringRecords) - 1
+
+	var currentGroupLength = 0
+	var groupIndex = 0
+	for i, record := range row.HotSpringRecords {
+		if record == Damaged {
+			currentGroupLength += 1
+			remainingNeeded -= 1
+			if groupIndex == len(row.HotSpringGroups) || currentGroupLength > row.HotSpringGroups[groupIndex] {
+				return true
+			}
+		} else if record == Working {
+			if currentGroupLength > 0 {
+				// First working spring after (contiguous group of) damaged
+				if currentGroupLength != row.HotSpringGroups[groupIndex] {
+					// Group does not match
+					return true
+				} else {
+					// Group matches, ignore and move on
+					currentGroupLength = 0
+					groupIndex += 1
+					remainingNeeded -= 1
+				}
+			}
+			// Previous was also working
+			if totalLength-i < remainingNeeded {
+				// If this Working spring needed to be damaged to be able to fit the remainder of the pattern in
+				return true
+			}
+		} else {
+			return false
+		}
+		// keep track of length of contiguous damaged and compare against group
+		// keep track of how far from the end and what groups are still needed
+	}
+	return false
 }
 
 func (row *HotSpringRow) setNextUnknown(toValue HotSpring) HotSpringRow {
@@ -138,4 +189,30 @@ func toHotSpringSlice(in string) []HotSpring {
 	}
 
 	return returnArray
+}
+
+func countPossibleCombinations(row HotSpringRow) int {
+	countUnknown, _, countDamaged := row.countHotSprings()
+
+	if countUnknown+countDamaged < row.countTargetTotalDamaged() {
+		// If the number of unknowns is not enough to make the total required then prune
+		return 0
+	}
+
+	if countUnknown == 0 {
+		// If all the unknowns have been set check if the row is valid
+		if row.isValid() {
+			return 1
+		} else {
+			return 0
+		}
+	}
+
+	// At this point, there are enough unknowns to fulfill the criteria
+	// Now check if the shape of the row will fit the format or can be pruned early
+	if row.shouldBePruned() {
+		return 0
+	}
+
+	return countPossibleCombinations(row.setNextUnknown(Damaged)) + countPossibleCombinations(row.setNextUnknown(Working))
 }
