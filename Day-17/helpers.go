@@ -14,123 +14,88 @@ const (
 )
 
 type node struct {
-	row, col    int
-	heatLoss    int
-	cost        int // Heat loss so far + own heatloss
-	index       int
-	n           int // How many in same direction
-	inDirection Direction
-	prev        *node
+	row, col   int
+	rowD, colD int
+	heatLoss   int
+	n          int // How many in same direction
+	index      int
 }
 
-var deltaMap = map[Direction][2]int{
-	North: {-1, 0},
-	South: {1, 0},
-	East:  {0, 1},
-	West:  {0, -1},
-}
-
-func createGrid(lines []string) [][]*node {
-	var grid = make([][]*node, len(lines))
+func createGrid(lines []string) [][]int {
+	var grid = make([][]int, len(lines))
 	for i := range grid {
-		grid[i] = make([]*node, len(lines[0]))
+		grid[i] = make([]int, len(lines[0]))
 	}
 
 	for row, line := range lines {
 		for col, ch := range line {
-			grid[row][col] = &node{
-				row:         row,
-				col:         col,
-				heatLoss:    int(ch - '0'),
-				cost:        int(^uint(0) >> 1),
-				index:       0,
-				n:           0,
-				inDirection: 0,
-				prev:        nil,
-			}
+			grid[row][col] = int(ch - '0')
 		}
 	}
-
-	grid[0][0].cost = 0
-	grid[0][0].inDirection = East
 
 	return grid
 }
 
-func aStar(start, goal *node, grid [][]*node) {
+func aStar(grid [][]int) int {
 	var d = &priorityQueue{}
-	var dMap = make(map[[2]int]struct{})
-	var f = make(map[[2]int]struct{})
+	// row, col, rowDelta, colDelta, n
+	var seen = make(map[[5]int]struct{})
 	heap.Init(d)
-	heap.Push(d, start)
-	dMap[[2]int{start.row, start.col}] = struct{}{}
+	heap.Push(d, &node{
+		row:      0,
+		col:      0,
+		rowD:     0,
+		colD:     0,
+		heatLoss: 0,
+		n:        0,
+		index:    0,
+	})
 
 	for d.Len() > 0 {
 		current := heap.Pop(d).(*node)
-		delete(dMap, [2]int{current.row, current.col})
-		f[[2]int{current.row, current.col}] = struct{}{}
-		// For each neighbour
-		if current.n < 3 {
-			row, col := current.row+deltaMap[current.inDirection][0], current.col+deltaMap[current.inDirection][1]
-			if 0 <= row && row < len(grid) && 0 <= col && col < len(grid[0]) {
-				coord := [2]int{row, col}
-				_, prs := f[coord]
-				_, prs2 := dMap[coord]
-				if !prs && !prs2 {
-					// Case where neighbour is undiscovered
-					// Add to d and set cost and prev to using current
-					newNode := grid[row][col]
-					newNode.n = current.n + 1
-					newNode.inDirection = current.inDirection
-					newNode.prev = current
-					newNode.cost = newNode.heatLoss + current.cost
-					heap.Push(d, newNode)
-					dMap[coord] = struct{}{}
-				} else if !prs {
-					// case where node is discovered but not finished
-					// Update cost if lower
-					newNode := grid[row][col]
-					if current.cost+newNode.heatLoss < newNode.cost {
-						d.update(newNode, current.cost+newNode.heatLoss)
-						newNode.prev = current
-						newNode.n = current.n + 1
-						newNode.inDirection = current.inDirection
-					}
-				}
+		if current.row == len(grid)-1 && current.col == len(grid[0])-1 {
+			return current.heatLoss
+		}
+
+		_, prs := seen[[5]int{current.row, current.col, current.rowD, current.colD, current.n}]
+		if prs {
+			continue
+		}
+		seen[[5]int{current.row, current.col, current.rowD, current.colD, current.n}] = struct{}{}
+
+		if current.n < 3 && (current.rowD != 0 || current.colD != 0) {
+			nr := current.row + current.rowD
+			nc := current.col + current.colD
+			if 0 <= nr && nr < len(grid) && 0 <= nc && nc < len(grid[0]) {
+				heap.Push(d, &node{
+					row:      nr,
+					col:      nc,
+					rowD:     current.rowD,
+					colD:     current.colD,
+					heatLoss: current.heatLoss + grid[nr][nc],
+					n:        current.n + 1,
+					index:    0,
+				})
 			}
 		}
-		leftDir := (((current.inDirection - 1) % 4) + 4) % 4
-		rightDir := (((current.inDirection + 1) % 4) + 4) % 4
-		coords := [2][3]int{
-			{current.row + deltaMap[leftDir][0], current.col + deltaMap[leftDir][1], int(leftDir)},
-			{current.row + deltaMap[rightDir][0], current.col + deltaMap[rightDir][1], int(rightDir)},
-		}
-		for _, coord := range coords {
-			if 0 <= coord[0] && coord[0] < len(grid) && 0 <= coord[1] && coord[1] < len(grid[0]) {
-				// if coord is valid on grid
-				_, prs := f[[2]int{coord[0], coord[1]}]
-				_, prs2 := dMap[[2]int{coord[0], coord[1]}]
-				if !prs && !prs2 {
-					// Case where neighbour is undiscovered
-					// Add to d and set cost and prev to using current
-					newNode := grid[coord[0]][coord[1]]
-					newNode.n = 1
-					newNode.inDirection = Direction(coord[2])
-					newNode.prev = current
-					heap.Push(d, newNode)
-					dMap[[2]int{coord[0], coord[1]}] = struct{}{}
-				} else if !prs {
-					// case where node is discovered but not finished
-					// Update cost if lower
-					newNode := grid[coord[0]][coord[1]]
-					if current.cost+newNode.heatLoss < newNode.cost {
-						d.update(newNode, current.cost+newNode.heatLoss)
-						newNode.n = 1
-						newNode.inDirection = Direction(coord[2])
-						newNode.prev = current
-					}
+
+		for _, deltas := range [4][2]int{{0, 1}, {1, 0}, {0, -1}, {-1, 0}} {
+			if deltas != [2]int{current.rowD, current.colD} && deltas != [2]int{-current.rowD, -current.colD} {
+				nr := current.row + deltas[0]
+				nc := current.col + deltas[1]
+				if 0 <= nr && nr < len(grid) && 0 <= nc && nc < len(grid[0]) {
+					heap.Push(d, &node{
+						row:      nr,
+						col:      nc,
+						rowD:     deltas[0],
+						colD:     deltas[1],
+						heatLoss: current.heatLoss + grid[nr][nc],
+						n:        1,
+					})
 				}
 			}
 		}
 	}
+
+	return -1
 }

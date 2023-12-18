@@ -1,9 +1,5 @@
 package main
 
-import (
-	"container/heap"
-)
-
 type priorityQueue []*node
 
 func (pq priorityQueue) Len() int {
@@ -11,7 +7,7 @@ func (pq priorityQueue) Len() int {
 }
 
 func (pq priorityQueue) Less(i, j int) bool {
-	return pq[i].cost+pq[i].heatLoss < pq[j].cost+pq[j].heatLoss
+	return pq[i].heatLoss < pq[j].heatLoss
 }
 
 func (pq priorityQueue) Swap(i, j int) {
@@ -34,9 +30,4 @@ func (pq *priorityQueue) Pop() interface{} {
 	no.index = -1
 	*pq = old[0 : n-1]
 	return no
-}
-
-func (pq *priorityQueue) update(node *node, cost int) {
-	node.cost = cost
-	heap.Fix(pq, node.index)
 }
