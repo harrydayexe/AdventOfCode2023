@@ -2,7 +2,6 @@ package main
 
 import (
 	"container/heap"
-	"math"
 )
 
 type Direction int
@@ -18,7 +17,6 @@ type node struct {
 	row, col    int
 	heatLoss    int
 	cost        int // Heat loss so far + own heatloss
-	heuristic   int
 	index       int
 	n           int // How many in same direction
 	inDirection Direction
@@ -26,8 +24,8 @@ type node struct {
 }
 
 var deltaMap = map[Direction][2]int{
-	North: {1, 0},
-	South: {-1, 0},
+	North: {-1, 0},
+	South: {1, 0},
 	East:  {0, 1},
 	West:  {0, -1},
 }
@@ -44,8 +42,7 @@ func createGrid(lines []string) [][]*node {
 				row:         row,
 				col:         col,
 				heatLoss:    int(ch - '0'),
-				cost:        0,
-				heuristic:   int(math.Abs(float64(row-(len(grid)-1))) + math.Abs(float64(col-(len(grid[0])-1)))),
+				cost:        int(^uint(0) >> 1),
 				index:       0,
 				n:           0,
 				inDirection: 0,
@@ -53,6 +50,9 @@ func createGrid(lines []string) [][]*node {
 			}
 		}
 	}
+
+	grid[0][0].cost = 0
+	grid[0][0].inDirection = East
 
 	return grid
 }
@@ -68,9 +68,6 @@ func aStar(start, goal *node, grid [][]*node) {
 	for d.Len() > 0 {
 		current := heap.Pop(d).(*node)
 		delete(dMap, [2]int{current.row, current.col})
-		if current == goal {
-			return
-		}
 		f[[2]int{current.row, current.col}] = struct{}{}
 		// For each neighbour
 		if current.n < 3 {
@@ -102,8 +99,8 @@ func aStar(start, goal *node, grid [][]*node) {
 				}
 			}
 		}
-		leftDir := (current.inDirection - 1) % 4
-		rightDir := (current.inDirection + 1) % 4
+		leftDir := (((current.inDirection - 1) % 4) + 4) % 4
+		rightDir := (((current.inDirection + 1) % 4) + 4) % 4
 		coords := [2][3]int{
 			{current.row + deltaMap[leftDir][0], current.col + deltaMap[leftDir][1], int(leftDir)},
 			{current.row + deltaMap[rightDir][0], current.col + deltaMap[rightDir][1], int(rightDir)},
@@ -136,22 +133,4 @@ func aStar(start, goal *node, grid [][]*node) {
 			}
 		}
 	}
-	//make an openlist containing only the starting node
-	//make an empty closed list
-	//while (the destination node has not been reached):
-	//consider the node with the lowest f score in the open list
-	//if (this node is our destination node) :
-	//we are finished
-	//if not:
-	//put the current node in the closed list and look at all of its neighbors
-	//for (each neighbor of the current node):
-	//if (neighbor has lower g value than current and is in the closed list) :
-	//replace the neighbor with the new, lower, g value
-	//current node is now the neighbor's parent
-	//else if (current g value is lower and this neighbor is in the open list ) :
-	//replace the neighbor with the new, lower, g value
-	//change the neighbor's parent to our current node
-	//
-	//else if this neighbor is not in both lists:
-	//add it to the open list and set its g
 }

@@ -11,7 +11,7 @@ func (pq priorityQueue) Len() int {
 }
 
 func (pq priorityQueue) Less(i, j int) bool {
-	return pq[i].cost+pq[i].heuristic+pq[i].heatLoss < pq[j].cost+pq[j].heuristic+pq[j].heatLoss
+	return pq[i].cost+pq[i].heatLoss < pq[j].cost+pq[j].heatLoss
 }
 
 func (pq priorityQueue) Swap(i, j int) {
