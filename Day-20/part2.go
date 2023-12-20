@@ -1,11 +1,12 @@
 package main
 
 import (
+	"slices"
 	"strings"
 	"unicode"
 )
 
-func part1(lines []string) int {
+func part2(lines []string) int {
 	var modules = make(map[string]*module)
 	var broadcastTargets []string
 	for _, line := range lines {
@@ -28,9 +29,25 @@ func part1(lines []string) int {
 		}
 	}
 
-	var low, high = 0, 0
-	for i := 0; i < 1000; i++ {
-		low += 1
+	var feed string
+	for s, m := range modules {
+		if slices.Contains(m.destinations, "rx") {
+			feed = s
+			break
+		}
+	}
+
+	var cycleLengths = make(map[string]int)
+	var seen = make(map[string]int)
+	for s, m := range modules {
+		if slices.Contains(m.destinations, feed) {
+			seen[s] = 0
+		}
+	}
+
+	var presses = 0
+	for {
+		presses += 1
 		q := make([]*queueItem, len(broadcastTargets))
 		for i2, target := range broadcastTargets {
 			q[i2] = &queueItem{
@@ -44,15 +61,32 @@ func part1(lines []string) int {
 			dqItem := q[0]
 			q = q[1:]
 
-			if dqItem.pulseType == Low {
-				low += 1
-			} else if dqItem.pulseType == High {
-				high += 1
-			}
-
 			nextMod, prs := modules[dqItem.destination]
 			if !prs {
 				continue
+			}
+
+			if nextMod.name == feed && dqItem.pulseType == High {
+				seen[dqItem.origin] += 1
+				_, prs := cycleLengths[dqItem.origin]
+				if !prs {
+					cycleLengths[dqItem.origin] = presses
+				}
+
+				allSet := true
+				for _, i := range seen {
+					if i == 0 {
+						allSet = false
+						break
+					}
+				}
+				if allSet {
+					x := 1
+					for _, i := range cycleLengths {
+						x = LCM(x, i)
+					}
+					return x
+				}
 			}
 
 			if nextMod.modType == FlipFlop {
@@ -79,5 +113,24 @@ func part1(lines []string) int {
 		}
 	}
 
-	return low * high
+	return -1
+}
+
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
 }
