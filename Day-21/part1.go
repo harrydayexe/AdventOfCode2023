@@ -1,7 +1,6 @@
 package main
 
 import (
-	"slices"
 	"strings"
 )
 
@@ -15,50 +14,42 @@ func part1(lines []string, MaxSteps int) int {
 		}
 	}
 
-	var visitedLocations = make(map[[2]int][]int)
+	var visitedLocations = map[[2]int]struct{}{
+		startingCoords: {},
+	}
+	var answers = make(map[[2]int]struct{})
 	var deltas = [4][2]int{
 		{0, 1},
 		{0, -1},
 		{1, 0},
 		{-1, 0},
 	}
-	var queue = [][3]int{{startingCoords[0], startingCoords[1], -1}}
+	var queue = [][3]int{{startingCoords[0], startingCoords[1], MaxSteps}}
 
 	for len(queue) > 0 {
 		var dqItem = queue[0]
-		coords := [2]int{dqItem[0], dqItem[1]}
 		queue = queue[1:]
+		coords := [2]int{dqItem[0], dqItem[1]}
 
-		n, prs := visitedLocations[coords]
-		if prs {
-			if !slices.Contains(n, dqItem[2]+1) {
-				visitedLocations[coords] = append(n, dqItem[2]+1)
-			}
-		} else {
-			visitedLocations[coords] = []int{dqItem[2] + 1}
+		if dqItem[2]%2 == 0 {
+			answers[coords] = struct{}{}
+		}
+		if dqItem[2] == 0 {
+			continue
 		}
 
 		for _, delta := range deltas {
 			newCoords := [2]int{coords[0] + delta[0], coords[1] + delta[1]}
-			if 0 <= newCoords[0] && newCoords[0] < len(lines) && 0 <= newCoords[1] && newCoords[1] < len(lines[0]) {
-				if lines[newCoords[0]][newCoords[1]] != '#' && dqItem[2]+1 < MaxSteps {
-					n, prs := visitedLocations[[2]int{newCoords[0], newCoords[1]}]
-					if !prs || !slices.Contains(n, dqItem[2]+1) {
-						queue = append(queue, [3]int{newCoords[0], newCoords[1], dqItem[2] + 1})
-					}
-				}
+			_, prs := visitedLocations[newCoords]
+			if newCoords[0] < 0 || newCoords[0] >= len(lines) || newCoords[1] < 0 || newCoords[1] >= len(lines[0]) || lines[newCoords[0]][newCoords[1]] == '#' || prs {
+				continue
 			}
+			visitedLocations[newCoords] = struct{}{}
+			queue = append(queue, [3]int{newCoords[0], newCoords[1], dqItem[2] - 1})
 		}
 	}
 
-	var count = 0
-	for _, n := range visitedLocations {
-		if slices.Contains(n, MaxSteps) {
-			count += 1
-		}
-	}
-
-	return count
+	return len(answers)
 }
 
 //func printGrid(lines []string, visitedLocations map[[2]int][]int) {
