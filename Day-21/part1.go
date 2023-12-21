@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"slices"
 	"strings"
 )
 
-func part1(lines []string) int {
+func part1(lines []string, MaxSteps int) int {
 	var startingCoords [2]int
 	for i, line := range lines {
 		index := strings.Index(line, "S")
@@ -15,7 +15,7 @@ func part1(lines []string) int {
 		}
 	}
 
-	var visitedLocations = make(map[[2]int]int)
+	var visitedLocations = make(map[[2]int][]int)
 	var deltas = [4][2]int{
 		{0, 1},
 		{0, -1},
@@ -29,14 +29,21 @@ func part1(lines []string) int {
 		coords := [2]int{dqItem[0], dqItem[1]}
 		queue = queue[1:]
 
-		visitedLocations[coords] = dqItem[2] + 1
+		n, prs := visitedLocations[coords]
+		if prs {
+			if !slices.Contains(n, dqItem[2]+1) {
+				visitedLocations[coords] = append(n, dqItem[2]+1)
+			}
+		} else {
+			visitedLocations[coords] = []int{dqItem[2] + 1}
+		}
 
 		for _, delta := range deltas {
 			newCoords := [2]int{coords[0] + delta[0], coords[1] + delta[1]}
 			if 0 <= newCoords[0] && newCoords[0] < len(lines) && 0 <= newCoords[1] && newCoords[1] < len(lines[0]) {
-				if lines[newCoords[0]][newCoords[1]] != '#' && dqItem[2]+1 < 6 {
+				if lines[newCoords[0]][newCoords[1]] != '#' && dqItem[2]+1 < MaxSteps {
 					n, prs := visitedLocations[[2]int{newCoords[0], newCoords[1]}]
-					if !prs || dqItem[2]+1 < n {
+					if !prs || !slices.Contains(n, dqItem[2]+1) {
 						queue = append(queue, [3]int{newCoords[0], newCoords[1], dqItem[2] + 1})
 					}
 				}
@@ -44,20 +51,28 @@ func part1(lines []string) int {
 		}
 	}
 
-	printGrid(lines, visitedLocations)
-	return len(visitedLocations)
-}
-
-func printGrid(lines []string, visitedLocations map[[2]int]int) {
-	var copyLines = make([][]rune, len(lines))
-	for i, line := range lines {
-		copyLines[i] = []rune(line)
-	}
-	for key := range visitedLocations {
-		copyLines[key[0]][key[1]] = rune(visitedLocations[key] + '0')
+	var count = 0
+	for _, n := range visitedLocations {
+		if slices.Contains(n, MaxSteps) {
+			count += 1
+		}
 	}
 
-	for _, line := range copyLines {
-		fmt.Println(string(line))
-	}
+	return count
 }
+
+//func printGrid(lines []string, visitedLocations map[[2]int][]int) {
+//	var copyLines = make([][]rune, len(lines))
+//	for i, line := range lines {
+//		copyLines[i] = []rune(line)
+//	}
+//	for key, n := range visitedLocations {
+//		if slices.Contains(n, MAX_STEPS) {
+//			copyLines[key[0]][key[1]] = '0'
+//		}
+//	}
+//
+//	for _, line := range copyLines {
+//		fmt.Println(string(line))
+//	}
+//}

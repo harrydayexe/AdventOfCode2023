@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -13,8 +14,10 @@ func main() {
 		return
 	}
 
+	n, _ := strconv.Atoi(os.Args[2])
+
 	lines := strings.Split(string(content), "\n")
 
-	println("Part 1:", part1(lines))
+	println("Part 1:", part1(lines, n))
 	//println("Part 2:", part2(lines))
 }
